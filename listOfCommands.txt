@@ -1,0 +1,505 @@
+		 Install the SSH server:
+
+	
+		sudo apt update
+		sudo apt install openssh-server
+		
+	 restart the SSH server after editing the sshd_config
+
+	sudo systemctl restart ssh
+
+
+	Adding New User
+	sudo useradd -m [username]
+	sudo passwd [username]
+
+
+
+
+			This could be sudo !
+				|
+			        |/
+sudo usermod -aG [groupName] username
+
+usermod
+This is the command used to modify a user account.
+
+-a (append)
+This option means “append” the user to the group(s) specified.
+Without -a, the user will be removed from all other groups not listed in the command.
+
+-G (groups)
+This specifies which group(s) the user should be added to.
+In this case, we are adding the user to the sudo group.
+
+
+username
+This is the name of the user you want to modify.
+
+
+
+	to Add A new group
+	groupadd groupname
+
+	to search for a specific group
+	getent group [groupName]
+
+	to list all groups existed
+	getent group
+
+
+				 VM CONFIGURATION & SSH SETUP
+ 				 VIRTUALBOX / HOST SETUP
+ 
+ `VBoxManage list vms`                                             								 Lists all registered VirtualBox VMs on your system.                        
+
+ `VBoxManage showvminfo "YOURVM"`                                  					 Displays detailed info about your VM, including NAT port forwarding rules. 
+
+ `VBoxManage modifyvm "YOURVM" --natpf1 "ssh4242,tcp,,2222,,4242"` 			 Adds a NAT port forwarding rule: host port 2222 → guest port 4242.        
+
+ `VBoxManage modifyvm "YOURVM" --natpf1 delete "ssh4242"`         				 Deletes an existing NAT port forwarding rule by name.                      
+
+" Set network adapter to **NAT**  in the vm manager"                                  							Ensures port forwarding will work.                                         
+
+ Add port forwarding rule (GUI)                                    								 Links host port 2222 to guest port 4242 via TCP.                           
+
+
+
+ 					Inside the Debian VM
+				 SYSTEM & NETWORK SETUP
+
+
+ `sudo ss -tuln | grep 4242`    			 Shows if SSH is listening on port 4242 (should return listening sockets). 
+
+ `sudo systemctl status ssh`    		 	 Shows whether the SSH server is running.                                                                                   
+
+ `sudo systemctl restart ssh`     			 Restarts the SSH server (after config changes).                                                                            
+
+ `ip a`                          						 Lists all network interfaces and IP addresses.                                                                             
+
+ `passwd`                         					 Changes the current user's password.                                                                                    
+
+ `whoami`                         					 Displays the current username.                                                                                            
+
+ `cat /etc/os-release`            				 Shows the OS version and distro info.                                                                                   
+
+ `sudo poweroff` or `sudo reboot` 			 Shuts down or reboots the VM safely.                                                                                       
+
+
+
+
+					 SSH CONFIGURATION     
+                                   
+
+ `sudo nano /etc/ssh/sshd_config`                  		 Opens SSH config file to change port, root login, etc.         
+
+ Edit: `Port 4242`                                 				 Changes SSH listening port from default 22 to 4242.            
+
+ Edit: `PermitRootLogin no` or `prohibit-password` 	 Disables root login via SSH for security.                      
+
+ Edit: `PasswordAuthentication yes`                		 Enables password login (if needed).                            
+ 
+ `sudo nano` instead of `chmod`                    			 Correct way to edit protected system files.                    
+
+
+
+				On the Host Machine
+				SSH & Port Forwarding Test
+
+
+ `ssh -p 2222 user@localhost`    							Connects from host to guest VM via port forwarding.         
+
+`ssh -v -p 2222 user@localhost` 							Runs SSH with verbose output for debugging.                 
+
+ `nc -vz localhost 2222`         								Tests if port 2222 is open and accepting connections.       
+
+`telnet localhost 2222`         								Alternative port connectivity test (if `telnet` installed). 
+
+You cannot `sudo lsof -i :2222`            									Shows processes listening on host port 2222.                
+
+
+
+nano ~/.bashrc  "Go to the bottom and add this line:"  export PATH=$PATH:/usr/sbin  "Apply the change now:"   source ~/.bashrc
+
+
+			To tail the SSH logs live, run this on yoLinux File Permissions 101
+
+Each file or directory has three sets of permissions:
+
+User (u) – the file owner
+
+Group (g) – users in the same group
+
+Others (o) – everyone else
+
+Each set has 3 types of permissions:
+
+r – read
+
+w – write
+
+x – execute (or access directory)
+
+✅ Check Current Permissions
+ls -l filename
+
+
+Example:
+
+-rwxr-xr--  1 root root  1234 Aug 28 12:00 script.sh
+
+
+Breakdown:
+
+Owner: rwx (read/write/execute)
+
+Group: r-x (read/execute)
+
+Others: r-- (read only)
+
+🔧 Changing Permissions
+
+Use the chmod command.
+
+📌 Syntax:
+chmod [who][+|-|=][permissions] filename
+
+🔹 Give Permissions
+chmod u+x filename    # Give execute to user
+chmod g+w filename    # Give write to group
+chmod o+r filename    # Give read to others
+
+🔹 Remove Permissions
+chmod u-x filename    # Remove execute from user
+chmod g-w filename    # Remove write from group
+chmod o-r filename    # Remove read from others
+
+🔹 Set Exact Permissions
+chmod u=rw filename    # User gets only read+write (not execute)
+chmod go= filename     # Group and others get no permissions
+
+🧮 Using Numeric (Octal) Permissions
+
+Each permission has a number:
+
+r = 4
+
+w = 2
+
+x = 1
+
+Example:
+chmod 755 filename
+
+
+Breakdown:
+
+7 = 4+2+1 → user: rwx
+
+5 = 4+0+1 → group: r-x
+
+5 = 4+0+1 → others: r-x
+
+Another example:
+
+chmod 640 filename
+
+
+→ user: rw-, group: r--, others: ---
+
+🧑‍🤝‍🧑 Changing Ownership (User or Group)
+
+To change who owns a file:
+
+chown username filename
+
+
+To change group ownership:
+
+chown :groupname filename
+
+
+Or both at once:
+
+chown username:groupname filename
+
+🧪 Examples
+Give a user execute permission on a script:
+chmod u+x script.sh
+
+Remove write permission from others:
+chmod o-w myfile.txt
+
+Change ownership of a file to alice:
+chown alice report.txtur Debian VM:
+
+						sudo journalctl -u ssh -f
+
+
+			To see recent SSH log entries without following, use:
+						sudo journalctl -u ssh --no-pager
+
+			To search for ufw program
+						sudo find / -type f -name ufw 2>/dev/null
+
+
+			deny incoming: Blocks all incoming connections (good security default)
+			allow outgoing: Allows the VM to connect out (e.g., internet, SSH from VM)
+
+						sudo ufw default deny incoming
+						sudo ufw default allow outgoing
+
+			SSH on port 4242, allow port 4242 
+						sudo ufw allow 4242/tcp
+						
+			to enable firewall :
+						sudo ufw enable
+			
+			to check status of ufw :
+						sudo ufw status
+						
+			to make a .sh file run like ./this
+						chmod +x monitor_resources.sh
+
+
+
+
+
+
+
+
+
+
+							Permissions in LINUX
+Linux File Permissions 101
+➜  ~ ssh mhdeeb@127.0.0.1 -p 2222
+
+Each file or directory has three sets of permissions:
+
+User (u) – the file owner
+
+Group (g) – users in the same group
+
+Others (o) – everyone else
+
+Each set has 3 types of permissions:
+
+r – read
+
+w – write
+
+x – execute (or access directory)
+
+✅ Check Current Permissions
+ls -l filename
+
+
+Example:
+
+-rwxr-xr--  1 root root  1234 Aug 28 12:00 script.sh
+
+
+Breakdown:
+
+Owner: rwx (read/write/execute)
+
+Group: r-x (read/execute)
+
+Others: r-- (read only)
+
+🔧 Changing Permissions
+
+Use the chmod command.
+
+📌 Syntax:
+chmod [who][+|-|=][permissions] filename
+
+🔹 Give Permissions
+chmod u+x filename    # Give execute to user
+chmod g+w filename    # Give write to group
+chmod o+r filename    # Give read to others
+
+🔹 Remove Permissions
+chmod u-x filename    # Remove execute from user
+chmod g-w filename    # Remove write from group
+chmod o-r filename    # Remove read from others
+
+🔹 Set Exact Permissions
+chmod u=rw filename    # User gets only read+write (not execute)
+chmod go= filename     # Group and others get no permissions
+
+🧮 Using Numeric (Octal) Permissions
+
+Each permission has a number:
+
+r = 4
+
+w = 2
+
+x = 1
+
+Example:
+chmod 755 filename
+
+
+Breakdown:
+
+7 = 4+2+1 → user: rwx
+
+5 = 4+0+1 → group: r-x
+
+5 = 4+0+1 → others: r-x
+
+Another example:
+
+chmod 640 filename
+
+
+→ user: rw-, group: r--, others: ---
+
+🧑‍🤝‍🧑 Changing Ownership (User or Group)
+
+To change who owns a file:
+
+chown username filename
+
+
+To change group ownership:
+
+chown :groupname filename
+
+
+Or both at once:
+Linux File Permissions 101
+
+Each file or directory has three sets of permissions:
+
+User (u) – the file owner
+
+Group (g) – users in the same group
+
+Others (o) – everyone else
+
+Each set has 3 types of permissions:sudo useradd -m username
+sudo passwd username
+
+r – read
+
+w – write
+
+x – execute (or access directory)
+
+✅ Check Current Permissions
+ls -l filename
+
+
+Example:
+
+-rwxr-xr--  1 root root  1234 Aug 28 12:00 script.sh
+
+
+Breakdown:
+
+Owner: rwx (read/write/execute)
+
+Group: r-x (read/execute)
+
+Others: r-- (read only)
+
+🔧 Changing Permissions
+
+Use the chmod command.
+
+📌 Syntax:
+chmod [who][+|-|=][permissions] filename
+
+🔹 Give Permissions
+chmod u+x filename    # Give execute to user
+chmod g+w filename    # Give write to group
+chmod o+r filename    # Give read to others
+
+🔹 Remove Permissions
+chmod u-x filename    # Remove execute from user
+chmod g-w filename    # Remove write from group
+chmod o-r filename    # Remove read from others
+
+🔹 Set Exact Permissions
+chmod u=rw filename    # User gets only read+write (not execute)
+chmod go= filename     # Group and others get no permissions
+
+🧮 Using Numeric (Octal) Permissions
+
+Each permission has a number:
+
+r = 4
+
+w = 2
+
+x = 1
+
+Example:
+chmod 755 filename
+
+
+Breakdown:
+
+7 = 4+2+1 → user: rwx➜  ~ ssh mhdeeb@127.0.0.1 -p 2222
+
+
+5 = 4+0+1 → group: r-x
+
+5 = 4+0+1 → others: r-x
+
+Another example:
+
+chmod 640 filename
+
+
+→ user: rw-, group: r--, others: ---
+
+🧑‍🤝‍🧑 Changing Ownership (User or Group)
+
+To change who owns a file:
+
+chown username filename
+
+
+To change group ownership:
+
+chown :groupname filename
+
+
+Or both at once:
+
+chown username:groupname filename
+
+🧪 Examples
+Give a user execute permission on a script:
+chmod u+x script.sh
+
+Remove write permission from others:
+chmod o-w myfile.txt
+
+Change ownership of a file to alice:
+chown alice report.txt
+chown username:groupname filename
+
+🧪 Examples
+Give a user execute permission on a script:
+chmod u+x script.sh
+➜  ~ ssh mhdeeb@127.0.0.1 -p 2222
+
+Remove write permission from others:
+chmod o-w myfile.txt
+
+Change ownership of a file to alice:
+chown alice report.txt
+
+
+
+
+
+
+
+
+
