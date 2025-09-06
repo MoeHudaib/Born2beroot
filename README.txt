@@ -274,7 +274,7 @@ FLUSH PRIVILEGES;
 
 ```bash
 wget https://wordpress.org/latest.tar.gz
-wp
+sudo tar -xzvf latest.tar.gz
 sudo mv wordpress /var/www/html
 sudo chown -R www-data:www-data /var/www/html/wordpress
 ```
