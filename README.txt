@@ -152,7 +152,6 @@ sudo nano /etc/login.defs
 
 Edit:
 
-```ini
 PASS_MAX_DAYS   30
 PASS_MIN_DAYS   2
 PASS_WARN_AGE   7
@@ -275,7 +274,7 @@ FLUSH PRIVILEGES;
 
 ```bash
 wget https://wordpress.org/latest.tar.gz
-tar xzvf latest.tar.gz
+wp
 sudo mv wordpress /var/www/html
 sudo chown -R www-data:www-data /var/www/html/wordpress
 ```

@@ -5,13 +5,16 @@
 		sudo apt install openssh-server
 		
 	 restart the SSH server after editing the sshd_config
-
 	sudo systemctl restart ssh
 
 
 	Adding New User
 	sudo useradd -m [username]
 	sudo passwd [username]
+
+
+		To change the hostname permanently
+		sudo hostnamectl set-hostname NEW_HOSTNAME
 
 
 
@@ -369,137 +372,104 @@ To change group ownership:
 chown :groupname filename
 
 
-Or both at once:
-Linux File Permissions 101
 
-Each file or directory has three sets of permissions:
+Got it 👍 You want to **wipe the whole LAMP/LEMP-like stack** (Apache, Lighttpd, PHP, MariaDB, FastCGI) from your system and start clean. I’ll give you a safe, step-by-step way.
 
-User (u) – the file owner
+---
 
-Group (g) – users in the same group
+## 🔥 Step 1: Stop running services
 
-Others (o) – everyone else
+Before uninstalling, stop everything so it won’t interfere:
 
-Each set has 3 types of permissions:sudo useradd -m username
-sudo passwd username
+```bash
+sudo systemctl stop apache2
+sudo systemctl stop mariadb
+sudo systemctl stop lighttpd
+```
 
-r – read
+---
 
-w – write
+## 🔥 Step 2: Remove Apache
 
-x – execute (or access directory)
+```bash
+sudo apt purge apache2 apache2-utils apache2-bin apache2.2-common -y
+sudo apt autoremove --purge -y
+```
 
-✅ Check Current Permissions
-ls -l filename
+---
 
+## 🔥 Step 3: Remove Lighttpd
 
-Example:
+```bash
+sudo apt purge lighttpd -y
+sudo apt autoremove --purge -y
+```
 
--rwxr-xr--  1 root root  1234 Aug 28 12:00 script.sh
+---
 
+## 🔥 Step 4: Remove PHP and FastCGI modules
 
-Breakdown:
+```bash
+sudo apt purge php* libapache2-mod-php* php-cgi php-fpm -y
+sudo apt autoremove --purge -y
+```
 
-Owner: rwx (read/write/execute)
+This removes:
 
-Group: r-x (read/execute)
+* PHP interpreter
+* FastCGI bindings (`php-cgi`, `php-fpm`)
+* Any PHP extensions you installed (`php-mysql`, etc.)
 
-Others: r-- (read only)
+---
 
-🔧 Changing Permissions
+## 🔥 Step 5: Remove MariaDB
 
-Use the chmod command.
+```bash
+sudo systemctl stop mariadb
+sudo apt purge mariadb-server mariadb-client mariadb-common mariadb-server-core-* mariadb-client-core-* -y
+sudo apt autoremove --purge -y
+```
 
-📌 Syntax:
-chmod [who][+|-|=][permissions] filename
+⚠️ This removes the MariaDB server **but leaves your database files** in `/var/lib/mysql`.
 
-🔹 Give Permissions
-chmod u+x filename    # Give execute to user
-chmod g+w filename    # Give write to group
-chmod o+r filename    # Give read to others
+If you want to **delete ALL databases permanently**:
 
-🔹 Remove Permissions
-chmod u-x filename    # Remove execute from user
-chmod g-w filename    # Remove write from group
-chmod o-r filename    # Remove read from others
+```bash
+sudo rm -rf /var/lib/mysql
+sudo rm -rf /etc/mysql
+```
 
-🔹 Set Exact Permissions
-chmod u=rw filename    # User gets only read+write (not execute)
-chmod go= filename     # Group and others get no permissions
+---
 
-🧮 Using Numeric (Octal) Permissions
+## 🔥 Step 6: Clean config and logs
 
-Each permission has a number:
+```bash
+sudo rm -rf /etc/apache2
+sudo rm -rf /etc/lighttpd
+sudo rm -rf /etc/php
+sudo rm -rf /var/log/apache2
+sudo rm -rf /var/log/lighttpd
+sudo rm -rf /var/log/mysql
+```
 
-r = 4
+---
 
-w = 2
+## 🔥 Step 7: Verify removal
 
-x = 1
+Check if anything is still running:
 
-Example:
-chmod 755 filename
+```bash
+sudo lsof -i :80
+sudo lsof -i :3306
+```
 
+If nothing shows up → you’re clean. 🎉
 
-Breakdown:
+---
 
-7 = 4+2+1 → user: rwx➜  ~ ssh mhdeeb@127.0.0.1 -p 2222
+✅ At this point, your system has **no Apache, no Lighttpd, no PHP, no FastCGI, no MariaDB, no configs, no databases**. It’s like a fresh install.
 
+---
 
-5 = 4+0+1 → group: r-x
-
-5 = 4+0+1 → others: r-x
-
-Another example:
-
-chmod 640 filename
-
-
-→ user: rw-, group: r--, others: ---
-
-🧑‍🤝‍🧑 Changing Ownership (User or Group)
-
-To change who owns a file:
-
-chown username filename
-
-
-To change group ownership:
-
-chown :groupname filename
-
-
-Or both at once:
-
-chown username:groupname filename
-
-🧪 Examples
-Give a user execute permission on a script:
-chmod u+x script.sh
-
-Remove write permission from others:
-chmod o-w myfile.txt
-
-Change ownership of a file to alice:
-chown alice report.txt
-chown username:groupname filename
-
-🧪 Examples
-Give a user execute permission on a script:
-chmod u+x script.sh
-➜  ~ ssh mhdeeb@127.0.0.1 -p 2222
-
-Remove write permission from others:
-chmod o-w myfile.txt
-
-Change ownership of a file to alice:
-chown alice report.txt
-
-
-
-
-
-
-
-
+Do you want me to also give you a **clean re-installation guide for Lighttpd + PHP + MariaDB only (without Apache at all)** so you can rebuild from scratch the correct way?
 
